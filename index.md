@@ -21,7 +21,7 @@ The NLB Procurement AI Assistant leverages advanced generative AI to automate th
 ### 1. Managing Projects (Dashboard)
 - The **Dashboard** shows all your active projects at a glance.
 - Click on any project to view its full content, current status, and latest compliance score.
-- Use the **"Export PDF"** button to prepare documents for official submission.
+- Use the **"Export PDF"** button to [download documents](https://github.com/user-attachments/files/26329431/Procurement_of_a_Digital_Film_Projection_System_AOR.pdf) for official submission.
 
 ### 2. Drafting a New Document
 - Navigate to the **"+ New Draft"** tab in the sidebar.
