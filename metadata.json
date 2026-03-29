@@ -1,0 +1,5 @@
+{
+  "name": "NLB Procurement AI Assistant",
+  "description": "An AI-powered platform for the National Library Board of Singapore to streamline procurement drafting, review, and compliance checking in accordance with government standards.",
+  "requestFramePermissions": []
+}
