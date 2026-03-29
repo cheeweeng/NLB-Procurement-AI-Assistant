@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -14,10 +14,13 @@ import {
   Clock,
   ArrowLeft,
   Download,
-  Send
+  Send,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
+import jsPDF from 'jspdf';
+import domtoimage from 'dom-to-image-more';
 import { cn } from './lib/utils';
 import { ProcurementProject, ProcurementType, ComplianceIssue } from './types';
 import { generateProcurementDraft, reviewProcurementDraft } from './lib/gemini';
@@ -50,6 +53,13 @@ export default function App() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewResult, setReviewResult] = useState<{ score: number; issues: ComplianceIssue[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: 'Compliance check completed for Digital Library Kiosks', time: '2h ago', read: false },
+    { id: 2, text: 'New draft generated: Library Management System Upgrade', time: '5h ago', read: true },
+  ]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   // Drafting form state
   const [draftForm, setDraftForm] = useState({
@@ -105,6 +115,13 @@ export default function App() {
       setError(err.message || 'An unexpected error occurred during the review.');
     } finally {
       setIsReviewing(false);
+    }
+  };
+
+  const handleSaveProject = (projectId: string, newContent: string, newType?: ProcurementType) => {
+    setProjects(projects.map(p => p.id === projectId ? { ...p, content: newContent, type: newType || p.type, lastModified: new Date().toISOString().split('T')[0] } : p));
+    if (selectedProject?.id === projectId) {
+      setSelectedProject({ ...selectedProject, content: newContent, type: newType || selectedProject.type, lastModified: new Date().toISOString().split('T')[0] });
     }
   };
 
@@ -169,7 +186,7 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 relative z-50">
           <div className="flex items-center gap-4 bg-slate-100 px-4 py-2 rounded-full w-96">
             <Search size={16} className="text-slate-400" />
             <input 
@@ -178,11 +195,57 @@ export default function App() {
               className="bg-transparent border-none text-sm focus:outline-none w-full"
             />
           </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-slate-600 relative">
+          <div className="flex items-center gap-4 relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 text-slate-400 hover:text-slate-600 relative transition-colors"
+            >
               <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              )}
             </button>
+
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden"
+                >
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-900">Notifications</h3>
+                    <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map(n => (
+                        <div key={n.id} className={cn("p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer", !n.read && "bg-blue-50/30")}>
+                          <p className="text-sm text-slate-800 leading-snug">{n.text}</p>
+                          <p className="text-[10px] text-slate-500 mt-1 font-medium">{n.time}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-slate-400">
+                        <Bell size={32} className="mx-auto mb-2 opacity-20" />
+                        <p className="text-sm">No new notifications</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 bg-slate-50 text-center">
+                    <button 
+                      onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
+                      className="text-xs font-bold text-[#00529B] hover:underline"
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </header>
 
@@ -206,6 +269,7 @@ export default function App() {
                 project={selectedProject} 
                 onBack={() => setSelectedProject(null)} 
                 onReview={() => handleReview(selectedProject)}
+                onSave={(content, type) => handleSaveProject(selectedProject.id, content, type)}
                 isReviewing={isReviewing}
                 reviewResult={reviewResult}
               />
@@ -417,7 +481,87 @@ function DraftingTool({ form, setForm, onSubmit, isGenerating }: { form: any, se
   );
 }
 
-function ProjectDetail({ project, onBack, onReview, isReviewing, reviewResult }: { project: ProcurementProject, onBack: () => void, onReview: () => void, isReviewing: boolean, reviewResult: any }) {
+function ProjectDetail({ project, onBack, onReview, onSave, isReviewing, reviewResult }: { project: ProcurementProject, onBack: () => void, onReview: () => void, onSave: (content: string, type: ProcurementType) => void, isReviewing: boolean, reviewResult: any }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [editedContent, setEditedContent] = useState(project.content);
+  const [editedType, setEditedType] = useState<ProcurementType>(project.type);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setEditedContent(project.content);
+    setEditedType(project.type);
+  }, [project.content, project.type]);
+
+  const handleSave = () => {
+    onSave(editedContent, editedType);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditedContent(project.content);
+    setEditedType(project.type);
+    setIsEditing(false);
+  };
+
+  const handleExportPDF = async () => {
+    if (!contentRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      // Use dom-to-image-more which handles modern CSS (like oklch) much better than html2canvas
+      const dataUrl = await domtoimage.toPng(contentRef.current, {
+        bgcolor: '#ffffff',
+        quality: 1,
+        width: contentRef.current.scrollWidth,
+        height: contentRef.current.scrollHeight,
+        style: {
+          // Force standard colors to avoid any oklch parsing issues in the screenshot library
+          color: '#0F172A',
+          backgroundColor: '#ffffff'
+        }
+      });
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate dimensions to fit A4
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+      
+      const imgWidth = pdfWidth;
+      const imgHeight = (img.height * pdfWidth) / img.width;
+      
+      // Handle multi-page if content is long
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`${project.title.replace(/\s+/g, '_')}_${project.type}.pdf`);
+    } catch (err) {
+      console.error('PDF Export failed:', err);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -431,33 +575,88 @@ function ProjectDetail({ project, onBack, onReview, isReviewing, reviewResult }:
           Back to Dashboard
         </button>
         <div className="flex gap-3">
-          <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50">
-            <Download size={16} />
-            Export PDF
-          </button>
-          <button 
-            onClick={onReview}
-            disabled={isReviewing}
-            className="px-4 py-2 bg-[#00529B] text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-[#00427A]"
-          >
-            {isReviewing ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-            Run Compliance Check
-          </button>
+          {!isEditing ? (
+            <>
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50"
+              >
+                <FileText size={16} />
+                Edit Draft
+              </button>
+              <button 
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                Export PDF
+              </button>
+              <button 
+                onClick={onReview}
+                disabled={isReviewing}
+                className="px-4 py-2 bg-[#00529B] text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-[#00427A]"
+              >
+                {isReviewing ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                Run Compliance Check
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={handleCancel}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-green-700"
+              >
+                <CheckCircle2 size={16} />
+                Save Changes
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-8">
-        <div className="col-span-2 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm min-h-[600px]">
-          <div className="prose prose-slate max-w-none">
-            <Markdown>{project.content || "_No content generated yet. Use the Drafting tool to create a draft._"}</Markdown>
-          </div>
+        <div className="col-span-2 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm min-h-[600px] flex flex-col">
+          {isEditing ? (
+            <textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              className="flex-1 w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-[#00529B] focus:outline-none resize-none"
+              placeholder="Edit your procurement document here..."
+            />
+          ) : (
+            <div ref={contentRef} className="prose prose-slate max-w-none p-4 bg-white">
+              <Markdown>{project.content || "_No content generated yet. Use the Drafting tool to create a draft._"}</Markdown>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-slate-900 mb-4">Project Info</h3>
             <div className="space-y-4">
-              <InfoRow label="Type" value={project.type} />
+              {isEditing ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Type</span>
+                  <select 
+                    value={editedType}
+                    onChange={(e) => setEditedType(e.target.value as ProcurementType)}
+                    className="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-bold focus:outline-none"
+                  >
+                    <option value="AOR">AOR</option>
+                    <option value="RS">RS</option>
+                    <option value="ER">ER</option>
+                  </select>
+                </div>
+              ) : (
+                <InfoRow label="Type" value={project.type} />
+              )}
               <InfoRow label="Status" value={project.status} />
               <InfoRow label="Last Modified" value={project.lastModified} />
             </div>

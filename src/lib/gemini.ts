@@ -13,7 +13,53 @@ export const generateProcurementDraft = async (
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const model = "gemini-3-flash-preview"; // Using flash for better reliability and speed
+  const model = "gemini-3-flash-preview";
+
+  let typeSpecificInstructions = "";
+  if (type === "ER") {
+    typeSpecificInstructions = `
+    This is an Evaluation Report (ER). Use the following structure:
+    1. Document Title: "Evaluation Report for [Project Title]"
+    2. Executive Summary
+    3. Introduction / Background
+       - Project title / Procurement title
+       - Brief project description / business need (short version)
+       - Reference to the approved Approval of Requirements (AOR)
+       - Estimated procurement value and budget source
+    4. Tender / Quotation Process Summary
+    5. Evaluation Committee
+    6. Evaluation Methodology
+    7. Preliminary Examination / Compliance Check
+    8. Detailed Evaluation
+    9. Recommendation and Justification
+    10. Prepared by / Endorsed by
+    11. Annexes
+    `;
+  } else if (type === "AOR") {
+    typeSpecificInstructions = `
+    This is an Approval of Requirements (AOR). Use the following structure:
+    1. Document Title: "Approval of Requirements for [Project Title]"
+    2. Project Background & Objectives
+    3. Justification for Procurement
+    4. Estimated Budget & Funding Source
+    5. Procurement Strategy & Timeline
+    6. Key Requirements Overview
+    7. Risk Assessment
+    8. Recommendation for Approval
+    `;
+  } else if (type === "RS") {
+    typeSpecificInstructions = `
+    This is a Requirement Specifications (RS) document. Use the following structure:
+    1. Document Title: "Requirement Specifications for [Project Title]"
+    2. Introduction & Scope of Work
+    3. Technical Specifications & Deliverables
+    4. Service Level Agreements (SLAs)
+    5. Delivery & Implementation Schedule
+    6. Evaluation Criteria (Critical & Non-Critical)
+    7. Safety & Compliance Requirements
+    `;
+  }
+
   const prompt = `
     Draft a professional procurement document for the National Library Board (NLB) of Singapore.
     Document Type: ${type}
@@ -23,13 +69,9 @@ export const generateProcurementDraft = async (
     Adhere strictly to Singapore Government Procurement (IM on Procurement) standards.
     Ensure alignment with NLB's mission: "To nurture a reading and learning nation and to build a knowledgeable and engaged community."
     
-    The draft should include:
-    - Executive Summary
-    - Detailed Requirements/Specifications
-    - Compliance with Government Regulations (e.g., Confidentiality, Safety, Environmental)
-    - Evaluation Criteria (if applicable)
+    ${typeSpecificInstructions}
 
-    Format the output in Markdown.
+    Format the output in Markdown. Ensure the title is correct for the document type and does not hallucinate "Requirement Specifications" if the type is "ER" or "AOR".
   `;
 
   try {
