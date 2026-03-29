@@ -29,10 +29,10 @@ The NLB Procurement AI Assistant leverages advanced generative AI to automate th
   <tr>
     <td width="60%">
 
-- Navigate to the **"+ New Draft"** tab in the sidebar.
-- Enter the **Project Title** and select the **Document Type** (AOR, RS, or ER).
-- Provide a brief **Project Description** and list the **Key Requirements**.
-- Click **"Generate AI Draft"**. The AI will create a structured Markdown document based on your inputs.
+- Navigate to the **"+ New Draft"** tab in the sidebar.  
+- Enter the **Project Title** and select the **Document Type** (AOR, RS, or ER).  
+- Provide a brief **Project Description** and list the **Key Requirements**.  
+- Click **"Generate AI Draft"**. The AI will create a structured Markdown document based on your inputs.  
 
     </td>
     <td width="40%">
@@ -46,8 +46,10 @@ The NLB Procurement AI Assistant leverages advanced generative AI to automate th
   <tr>
     <td width="60%">
 
-- While viewing a project's details, click **"Run Compliance Check"**.  
-- The AI will analyze the content and provide a **Compliance Report** with a score (0–100%) and a list of issues categorized by severity (High, Medium, Low).  
+- While viewing a project's details, click **"Run Compliance Check"**.
+
+- The AI will analyze the content and provide a **Compliance Report** with a score (0–100%) and a list of issues categorized by severity (High, Medium, Low).
+
 - Use the suggestions provided to refine your draft.
 
     </td>
@@ -58,10 +60,10 @@ The NLB Procurement AI Assistant leverages advanced generative AI to automate th
 </table>
 
 ### 4. Oversight & Audit (Compliance Audit Dashboard)
-- Navigate to the **"Compliance Review"** tab in the sidebar.
-- This page acts as a centralized **Audit Log** for managers.
-- View compliance scores and statuses for all documents in a single table.
-- Click **"Run Audit"** or **"Re-audit"** to update the compliance status of any document without opening it.
+- Navigate to the **"Compliance Review"** tab in the sidebar.  
+- This page acts as a centralized **Audit Log** for managers.  
+- View compliance scores and statuses for all documents in a single table.  
+- Click **"Run Audit"** or **"Re-audit"** to update the compliance status of any document without opening it.  
 <img width="900" height="246" alt="Image" src="https://github.com/user-attachments/assets/7070080f-f535-4a6b-a10b-59f55860249b" />
 
 ## ⚖️ Compliance & Standards
