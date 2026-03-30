@@ -74,6 +74,6 @@ This application is designed to support the following regulatory frameworks:
 - **Data Privacy**: No PII (Personally Identifiable Information) should be included in the AI prompts.
 
 ---
-**For set up and installation** - clone the [depository](https://github.com/cheeweeng/NLB-Procurement-AI-Assistant)  
+**For set up and installation** - clone the [repository](https://github.com/cheeweeng/NLB-Procurement-AI-Assistant)  
 
 *Note: This application is a tool to assist procurement officers. All AI-generated content should be reviewed and verified by a qualified officer before final submission.*
