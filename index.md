@@ -29,10 +29,10 @@ The NLB Procurement AI Assistant leverages advanced generative AI to automate th
   <tr>
     <td width="60%">
 
-- Navigate to the **"+ New Draft"** tab in the sidebar.  <br><br>
-- Enter the **Project Title** and select the **Document Type** (AOR, RS, or ER).  <br><br>
-- Provide a brief **Project Description** and list the **Key Requirements**.  <br><br>
-- Click **"Generate AI Draft"**. The AI will create a structured Markdown document based on your inputs.  
+- Navigate to the <b>+ New Draft</b> tab in the sidebar.  <br><br>
+- Enter the <b>Project Title</b> and select the <b>Document Type</b> (AOR, RS, or ER).  <br><br>
+- Provide a brief <b>Project Description</b> and list the <b>Key Requirements</b>.  <br><br>
+- Click <b>Generate AI Draft</b>. The AI will create a structured Markdown document based on your inputs.  
 
     </td>
     <td width="40%">
@@ -46,9 +46,9 @@ The NLB Procurement AI Assistant leverages advanced generative AI to automate th
   <tr>
     <td width="60%">
 
-- While viewing a project's details, click **"Run Compliance Check"**.<br><br>
+- While viewing a project's details, click <b>Run Compliance Check</b>.<br><br>
 
-- The AI will analyze the content and provide a **Compliance Report** with a score (0–100%) and a list of issues categorized by severity (High, Medium, Low).<br><br>
+- The AI will analyze the content and provide a <b>Compliance Report</b> with a score (0–100%) and a list of issues categorized by severity (High, Medium, Low).<br><br>
 
 - Use the suggestions provided to refine your draft.<br><br>
 
